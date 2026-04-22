@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { BeachService } from "../services/beach.service";
+import { getBestTimeOfDay } from "../utils/getBestTimeOfDay";
 import { getBeachScore } from "../utils/getBeachScore";
 
 const beachService = new BeachService();
@@ -16,14 +17,16 @@ export async function getBeach(req: Request, res: Response): Promise<void> {
   }
 
   try {
-    const data = await beachService.getBeachData(lat, lon);
-    const status = getBeachScore(data);
+    const beachData = await beachService.getBeachData(lat, lon);
+    const status = getBeachScore(beachData.current);
+    const bestTime = getBestTimeOfDay(beachData.periods);
 
     res.json({
-      temp: data.temp,
-      wind: data.wind,
-      wave_height: data.waveHeight,
+      temp: beachData.current.temp,
+      wind: beachData.current.wind,
+      wave_height: beachData.current.waveHeight,
       status,
+      best_time: bestTime,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error";
