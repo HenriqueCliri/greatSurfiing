@@ -99,6 +99,7 @@ Frontend runs at `http://localhost:5173` and proxies `/beach` requests to backen
   "wind": 6.5,
   "wave_height": 1.1,
   "status": "GOOD",
-  "best_time": "MORNING"
+  "best_time": "MORNING",
+  "summary": "Ondas de 1.1m, com vento moderado e condições boas para praia."
 }
 ```

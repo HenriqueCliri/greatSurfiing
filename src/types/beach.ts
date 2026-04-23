@@ -14,6 +14,7 @@ export interface BeachResponse {
   wave_height: number;
   status: BeachStatus;
   best_time: BestTime;
+  summary: string;
 }
 
 export interface PeriodBeachData {
