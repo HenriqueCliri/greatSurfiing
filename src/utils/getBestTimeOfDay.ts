@@ -1,14 +1,14 @@
-import { BeachData, BestTime, PeriodBeachData } from "../types/beach";
+import { BeachData, BeachStatus, BestTime, PeriodBeachData } from "../types/beach";
 import { getBeachScore } from "./getBeachScore";
 
 const PERIOD_ORDER: BestTime[] = ["MORNING", "AFTERNOON", "NIGHT"];
 
-function scoreToValue(score: ReturnType<typeof getBeachScore>): number {
-  if (score === "GOOD") {
+function scoreToValue(status: BeachStatus): number {
+  if (status === "GOOD") {
     return 3;
   }
 
-  if (score === "MEDIUM") {
+  if (status === "MEDIUM") {
     return 2;
   }
 
@@ -26,21 +26,21 @@ function toEntries(periods: PeriodBeachData): Array<{ period: BestTime; data: Be
 export function getBestTimeOfDay(periods: PeriodBeachData): BestTime {
   const entries = toEntries(periods);
 
-  entries.sort((a, b) => {
-    const scoreDiff = scoreToValue(getBeachScore(b.data)) - scoreToValue(getBeachScore(a.data));
+  entries.sort((left, right) => {
+    const rightScore = scoreToValue(getBeachScore(right.data));
+    const leftScore = scoreToValue(getBeachScore(left.data));
+    const scoreDiff = rightScore - leftScore;
 
     if (scoreDiff !== 0) {
       return scoreDiff;
     }
 
-    // tie-break by wind preference (lower wind is better)
-    const windDiff = a.data.wind - b.data.wind;
+    const windDiff = left.data.wind - right.data.wind;
     if (windDiff !== 0) {
       return windDiff;
     }
 
-    // deterministic fallback: MORNING -> AFTERNOON -> NIGHT
-    return PERIOD_ORDER.indexOf(a.period) - PERIOD_ORDER.indexOf(b.period);
+    return PERIOD_ORDER.indexOf(left.period) - PERIOD_ORDER.indexOf(right.period);
   });
 
   return entries[0].period;

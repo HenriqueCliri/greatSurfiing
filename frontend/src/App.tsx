@@ -1,5 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
-import { useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Status = "GOOD" | "MEDIUM" | "BAD";
 type BestTime = "MORNING" | "AFTERNOON" | "NIGHT";
@@ -12,9 +11,20 @@ interface BeachResponse {
   best_time: BestTime;
 }
 
+interface ApiErrorPayload {
+  error?: string;
+  details?: string;
+}
+
 const DEFAULT_COORDS = {
   lat: "34.0195",
   lon: "-118.4912",
+};
+
+const LOCATION_MESSAGES = {
+  loading: "Getting your location...",
+  usingCurrent: "Using your current location.",
+  unsupported: "Geolocation not supported. Using default coordinates.",
 };
 
 function getStatusClass(status: Status): string {
@@ -29,13 +39,17 @@ function getStatusClass(status: Status): string {
   return "status bad";
 }
 
+function toApiErrorMessage(payload: ApiErrorPayload | null, statusCode: number): string {
+  return payload?.details || payload?.error || `Request failed with status ${statusCode}`;
+}
+
 export default function App(): JSX.Element {
   const [lat, setLat] = useState(DEFAULT_COORDS.lat);
   const [lon, setLon] = useState(DEFAULT_COORDS.lon);
   const [data, setData] = useState<BeachResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [locationMessage, setLocationMessage] = useState("Getting your location...");
+  const [locationMessage, setLocationMessage] = useState(LOCATION_MESSAGES.loading);
 
   const canFetch = useMemo(() => lat.trim().length > 0 && lon.trim().length > 0, [lat, lon]);
 
@@ -47,15 +61,14 @@ export default function App(): JSX.Element {
       const response = await fetch(`/beach?lat=${encodeURIComponent(latValue)}&lon=${encodeURIComponent(lonValue)}`);
 
       if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string; details?: string } | null;
-        const message = payload?.details || payload?.error || `Request failed with status ${response.status}`;
-        throw new Error(message);
+        const payload = (await response.json().catch(() => null)) as ApiErrorPayload | null;
+        throw new Error(toApiErrorMessage(payload, response.status));
       }
 
       const payload = (await response.json()) as BeachResponse;
       setData(payload);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "Unknown error";
       setError(message);
       setData(null);
     } finally {
@@ -65,7 +78,7 @@ export default function App(): JSX.Element {
 
   useEffect(() => {
     if (!navigator.geolocation) {
-      setLocationMessage("Geolocation not supported. Using default coordinates.");
+      setLocationMessage(LOCATION_MESSAGES.unsupported);
       fetchBeach(DEFAULT_COORDS.lat, DEFAULT_COORDS.lon);
       return;
     }
@@ -77,7 +90,7 @@ export default function App(): JSX.Element {
 
         setLat(userLat);
         setLon(userLon);
-        setLocationMessage("Using your current location.");
+        setLocationMessage(LOCATION_MESSAGES.usingCurrent);
         fetchBeach(userLat, userLon);
       },
       (geoError) => {
