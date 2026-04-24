@@ -149,3 +149,6 @@ mobile/
 4. App fetches beach conditions and shows: temperature, wind, wave height, status, best time, and summary.
 
 > For physical devices, update `BASE_URL` in `mobile/src/services/api.ts` to your machine LAN IP (e.g. `http://192.168.1.10:3000`).
+
+## Shared service layer example
+- `services/api.ts` exposes `getBeachData(lat, lon)` with typed return data and error handling for network failures and invalid responses.
