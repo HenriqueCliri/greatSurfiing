@@ -116,6 +116,11 @@ mobile/
 ├─ package.json
 ├─ tsconfig.json
 └─ src/
+   ├─ components/
+   │  ├─ MetricCard.tsx
+   │  └─ StatusText.tsx
+   ├─ hooks/
+   │  └─ useBeachConditions.ts
    ├─ screens/
    │  └─ HomeScreen.tsx
    ├─ services/
@@ -126,7 +131,9 @@ mobile/
 
 ### Main files
 - `mobile/App.tsx`: app entrypoint that renders `HomeScreen`.
-- `mobile/src/screens/HomeScreen.tsx`: single-screen UI + geolocation permission + loading + error handling + fetch flow.
+- `mobile/src/screens/HomeScreen.tsx`: presentation layer for the single-screen UI.
+- `mobile/src/hooks/useBeachConditions.ts`: location + API orchestration logic.
+- `mobile/src/components/MetricCard.tsx` and `mobile/src/components/StatusText.tsx`: reusable UI components.
 - `mobile/src/services/api.ts`: backend API client (`GET /beach`).
 - `mobile/src/types/beach.ts`: response contract types.
 
