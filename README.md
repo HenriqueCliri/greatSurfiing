@@ -116,6 +116,8 @@ mobile/
 ├─ package.json
 ├─ tsconfig.json
 └─ src/
+   ├─ screens/
+   │  └─ HomeScreen.tsx
    ├─ services/
    │  └─ api.ts
    └─ types/
@@ -123,7 +125,8 @@ mobile/
 ```
 
 ### Main files
-- `mobile/App.tsx`: location permission, geolocation retrieval, API call orchestration, UI rendering.
+- `mobile/App.tsx`: app entrypoint that renders `HomeScreen` with coordinates.
+- `mobile/src/screens/HomeScreen.tsx`: single-screen UI + loading + error handling + fetch flow.
 - `mobile/src/services/api.ts`: backend API client (`GET /beach`).
 - `mobile/src/types/beach.ts`: response contract types.
 
@@ -136,7 +139,6 @@ mobile/
    npm run start
    ```
 3. In Expo DevTools, run on simulator/device (`i`, `a`, or scan QR code).
-4. Grant location permission when prompted.
-5. App fetches beach conditions automatically and shows: temperature, wind, wave height, status, best time, and summary.
+4. App fetches beach conditions and shows: temperature, wind, wave height, status, best time, and summary.
 
 > For physical devices, update `BASE_URL` in `mobile/src/services/api.ts` to your machine LAN IP (e.g. `http://192.168.1.10:3000`).
