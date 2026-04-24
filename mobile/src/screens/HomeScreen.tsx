@@ -9,6 +9,18 @@ const DEFAULT_COORDS = {
   lon: -118.4912,
 };
 
+function getStatusColor(status: BeachResponse["status"]): string {
+  if (status === "GOOD") {
+    return "#16a34a";
+  }
+
+  if (status === "MEDIUM") {
+    return "#ca8a04";
+  }
+
+  return "#dc2626";
+}
+
 export default function HomeScreen(): JSX.Element {
   const [data, setData] = useState<BeachResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -83,15 +95,32 @@ export default function HomeScreen(): JSX.Element {
         {error ? <Text style={styles.error}>Error: {error}</Text> : null}
 
         {data ? (
-          <View style={styles.metricsContainer}>
-            <Text style={styles.metric}>Temperature: <Text style={styles.metricValue}>{data.temp.toFixed(1)} °C</Text></Text>
-            <Text style={styles.metric}>Wind: <Text style={styles.metricValue}>{data.wind.toFixed(1)} m/s</Text></Text>
-            <Text style={styles.metric}>Wave height: <Text style={styles.metricValue}>{data.wave_height.toFixed(2)} m</Text></Text>
+          <>
+            <Text style={[styles.status, { color: getStatusColor(data.status) }]}>{data.status}</Text>
 
-            <Text style={styles.status}>{data.status}</Text>
+            <View style={styles.metricsGrid}>
+              <View style={styles.metricCard}>
+                <Text style={styles.metricIcon}>🌡</Text>
+                <Text style={styles.metricLabel}>Temperature</Text>
+                <Text style={styles.metricValue}>{data.temp.toFixed(1)} °C</Text>
+              </View>
+
+              <View style={styles.metricCard}>
+                <Text style={styles.metricIcon}>🌬</Text>
+                <Text style={styles.metricLabel}>Wind</Text>
+                <Text style={styles.metricValue}>{data.wind.toFixed(1)} m/s</Text>
+              </View>
+
+              <View style={styles.metricCard}>
+                <Text style={styles.metricIcon}>🌊</Text>
+                <Text style={styles.metricLabel}>Wave Height</Text>
+                <Text style={styles.metricValue}>{data.wave_height.toFixed(2)} m</Text>
+              </View>
+            </View>
+
             <Text style={styles.bestTime}>Best time: {data.best_time}</Text>
             <Text style={styles.summary}>{data.summary}</Text>
-          </View>
+          </>
         ) : null}
       </View>
     </SafeAreaView>
@@ -108,16 +137,16 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "100%",
-    maxWidth: 420,
+    maxWidth: 430,
     backgroundColor: "#ffffff",
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 20,
     alignItems: "center",
   },
   title: {
     fontSize: 30,
     fontWeight: "800",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   location: {
     fontSize: 14,
@@ -125,32 +154,50 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: "center",
   },
-  metricsContainer: {
-    width: "100%",
-    marginTop: 16,
-    gap: 10,
-  },
-  metric: {
-    fontSize: 20,
-    textAlign: "center",
-  },
-  metricValue: {
-    fontWeight: "700",
-  },
   status: {
-    marginTop: 8,
+    marginTop: 4,
+    marginBottom: 16,
     textAlign: "center",
-    fontSize: 48,
+    fontSize: 56,
     fontWeight: "900",
   },
+  metricsGrid: {
+    width: "100%",
+    gap: 10,
+  },
+  metricCard: {
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
+  },
+  metricIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  metricLabel: {
+    fontSize: 14,
+    color: "#475569",
+  },
+  metricValue: {
+    marginTop: 4,
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#0f172a",
+  },
   bestTime: {
+    marginTop: 16,
     textAlign: "center",
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "700",
   },
   summary: {
+    marginTop: 10,
     textAlign: "center",
-    fontSize: 18,
+    fontSize: 17,
     color: "#334155",
   },
   error: {
