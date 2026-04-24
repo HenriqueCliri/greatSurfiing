@@ -1,19 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import * as Location from "expo-location";
 import { fetchBeachConditions } from "../services/api";
 import { BeachResponse } from "../types/beach";
 
-interface HomeScreenProps {
-  lat: number;
-  lon: number;
-}
+const DEFAULT_COORDS = {
+  lat: 34.0195,
+  lon: -118.4912,
+};
 
-export default function HomeScreen({ lat, lon }: HomeScreenProps): JSX.Element {
+export default function HomeScreen(): JSX.Element {
   const [data, setData] = useState<BeachResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [locationText, setLocationText] = useState("Obtaining location...");
 
-  const loadBeachData = useCallback(async (): Promise<void> => {
+  const loadBeachData = useCallback(async (lat: number, lon: number): Promise<void> => {
     setLoading(true);
     setError(null);
 
@@ -27,18 +29,55 @@ export default function HomeScreen({ lat, lon }: HomeScreenProps): JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [lat, lon]);
+  }, []);
+
+  const loadWithUserLocation = useCallback(async (): Promise<void> => {
+    const permission = await Location.requestForegroundPermissionsAsync();
+
+    if (permission.status !== "granted") {
+      setLocationText("Location permission denied. Using default coordinates.");
+      await loadBeachData(DEFAULT_COORDS.lat, DEFAULT_COORDS.lon);
+      return;
+    }
+
+    const position = await Location.getCurrentPositionAsync({});
+    const lat = Number(position.coords.latitude.toFixed(4));
+    const lon = Number(position.coords.longitude.toFixed(4));
+
+    setLocationText(`Lat ${lat}, Lon ${lon}`);
+    await loadBeachData(lat, lon);
+  }, [loadBeachData]);
 
   useEffect(() => {
-    loadBeachData().catch(() => {
-      // errors are already handled in loadBeachData
+    let isMounted = true;
+
+    const start = async (): Promise<void> => {
+      try {
+        await loadWithUserLocation();
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+
+        setLocationText("Location unavailable. Using default coordinates.");
+        await loadBeachData(DEFAULT_COORDS.lat, DEFAULT_COORDS.lon);
+      }
+    };
+
+    start().catch(() => {
+      // Errors are handled in start.
     });
-  }, [loadBeachData]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [loadBeachData, loadWithUserLocation]);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.title}>Beach Conditions</Text>
+        <Text style={styles.location}>{locationText}</Text>
 
         {loading ? <ActivityIndicator size="large" color="#2563eb" /> : null}
         {error ? <Text style={styles.error}>Error: {error}</Text> : null}
@@ -78,7 +117,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: "800",
+    marginBottom: 8,
+  },
+  location: {
+    fontSize: 14,
+    color: "#64748b",
     marginBottom: 16,
+    textAlign: "center",
   },
   metricsContainer: {
     width: "100%",

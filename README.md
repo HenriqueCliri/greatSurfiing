@@ -125,8 +125,8 @@ mobile/
 ```
 
 ### Main files
-- `mobile/App.tsx`: app entrypoint that renders `HomeScreen` with coordinates.
-- `mobile/src/screens/HomeScreen.tsx`: single-screen UI + loading + error handling + fetch flow.
+- `mobile/App.tsx`: app entrypoint that renders `HomeScreen`.
+- `mobile/src/screens/HomeScreen.tsx`: single-screen UI + geolocation permission + loading + error handling + fetch flow.
 - `mobile/src/services/api.ts`: backend API client (`GET /beach`).
 - `mobile/src/types/beach.ts`: response contract types.
 
