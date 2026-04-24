@@ -103,3 +103,52 @@ Frontend runs at `http://localhost:5173` and proxies `/beach` requests to backen
   "summary": "Ondas de 1.1m, com vento moderado e condições boas para praia."
 }
 ```
+
+---
+
+## Mobile (React Native + Expo + TypeScript)
+
+### Project structure
+```txt
+mobile/
+├─ App.tsx
+├─ app.json
+├─ package.json
+├─ tsconfig.json
+└─ src/
+   ├─ components/
+   │  ├─ MetricCard.tsx
+   │  └─ StatusText.tsx
+   ├─ hooks/
+   │  └─ useBeachConditions.ts
+   ├─ screens/
+   │  └─ HomeScreen.tsx
+   ├─ services/
+   │  └─ api.ts
+   └─ types/
+      └─ beach.ts
+```
+
+### Main files
+- `mobile/App.tsx`: app entrypoint that renders `HomeScreen`.
+- `mobile/src/screens/HomeScreen.tsx`: presentation layer for the single-screen UI.
+- `mobile/src/hooks/useBeachConditions.ts`: location + API orchestration logic.
+- `mobile/src/components/MetricCard.tsx` and `mobile/src/components/StatusText.tsx`: reusable UI components.
+- `mobile/src/services/api.ts`: backend API client (`GET /beach`).
+- `mobile/src/types/beach.ts`: response contract types.
+
+### Step-by-step setup
+1. Start backend API at `http://localhost:3000`.
+2. Open mobile project:
+   ```bash
+   cd mobile
+   npm install
+   npm run start
+   ```
+3. In Expo DevTools, run on simulator/device (`i`, `a`, or scan QR code).
+4. App fetches beach conditions and shows: temperature, wind, wave height, status, best time, and summary.
+
+> For physical devices, update `BASE_URL` in `mobile/src/services/api.ts` to your machine LAN IP (e.g. `http://192.168.1.10:3000`).
+
+## Shared service layer example
+- `services/api.ts` exposes `getBeachData(lat, lon)` with typed return data and error handling for network failures and invalid responses.
