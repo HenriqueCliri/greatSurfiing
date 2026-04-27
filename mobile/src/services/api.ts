@@ -6,24 +6,51 @@ interface ApiErrorPayload {
   details?: string;
 }
 
-function isBeachResponse(value: unknown): value is BeachResponse {
+function toFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+function parseBeachResponse(value: unknown): BeachResponse | null {
   if (!value || typeof value !== "object") {
-    return false;
+    return null;
   }
 
   const data = value as Record<string, unknown>;
+  const temp = toFiniteNumber(data.temp);
+  const wind = toFiniteNumber(data.wind);
+  const waveHeight = toFiniteNumber(data.wave_height ?? data.waveHeight);
+  const status = data.status;
+  const bestTime = data.best_time ?? data.bestTime;
+  const summary = data.summary;
 
-  return (
-    typeof data.temp === "number" &&
-    Number.isFinite(data.temp) &&
-    typeof data.wind === "number" &&
-    Number.isFinite(data.wind) &&
-    typeof data.wave_height === "number" &&
-    Number.isFinite(data.wave_height) &&
-    typeof data.status === "string" &&
-    typeof data.best_time === "string" &&
-    typeof data.summary === "string"
-  );
+  if (
+    temp === null ||
+    wind === null ||
+    waveHeight === null ||
+    typeof status !== "string" ||
+    typeof bestTime !== "string" ||
+    typeof summary !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    temp,
+    wind,
+    wave_height: waveHeight,
+    status: status as BeachResponse["status"],
+    best_time: bestTime as BeachResponse["best_time"],
+    summary,
+  };
 }
 
 function normalizeBaseUrl(raw: string): string {
@@ -80,11 +107,11 @@ export async function fetchBeachConditions(lat: number, lon: number): Promise<Be
     throw new Error(toErrorMessage(payload, response.status));
   }
 
-  const payload = (await response.json().catch(() => null)) as unknown;
+  const parsed = parseBeachResponse(await response.json().catch(() => null));
 
-  if (!isBeachResponse(payload)) {
+  if (!parsed) {
     throw new Error("Invalid API response format for beach conditions");
   }
 
-  return payload;
+  return parsed;
 }
