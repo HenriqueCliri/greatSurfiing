@@ -6,6 +6,26 @@ interface ApiErrorPayload {
   details?: string;
 }
 
+function isBeachResponse(value: unknown): value is BeachResponse {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const data = value as Record<string, unknown>;
+
+  return (
+    typeof data.temp === "number" &&
+    Number.isFinite(data.temp) &&
+    typeof data.wind === "number" &&
+    Number.isFinite(data.wind) &&
+    typeof data.wave_height === "number" &&
+    Number.isFinite(data.wave_height) &&
+    typeof data.status === "string" &&
+    typeof data.best_time === "string" &&
+    typeof data.summary === "string"
+  );
+}
+
 function normalizeBaseUrl(raw: string): string {
   const sanitized = raw.trim().replace(/\/+$/, "");
 
@@ -60,5 +80,11 @@ export async function fetchBeachConditions(lat: number, lon: number): Promise<Be
     throw new Error(toErrorMessage(payload, response.status));
   }
 
-  return (await response.json()) as BeachResponse;
+  const payload = (await response.json().catch(() => null)) as unknown;
+
+  if (!isBeachResponse(payload)) {
+    throw new Error("Invalid API response format for beach conditions");
+  }
+
+  return payload;
 }
