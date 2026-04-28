@@ -7,6 +7,7 @@ export default function App(): JSX.Element {
 =======
 import HomeScreen from "./src/screens/HomeScreen";
 import React from 'react'
+
 export default function App(): React.ReactElement {
   return <HomeScreen />;
 >>>>>>> 09bf96e (invalid data from API error)
