@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import type { ReactElement } from "react";
 
 interface MetricCardProps {
   icon: string;
@@ -6,7 +7,7 @@ interface MetricCardProps {
   value: string;
 }
 
-export default function MetricCard({ icon, label, value }: MetricCardProps): JSX.Element {
+export default function MetricCard({ icon, label, value }: MetricCardProps): ReactElement {
   return (
     <View style={styles.metricCard}>
       <Text style={styles.metricIcon}>{icon}</Text>

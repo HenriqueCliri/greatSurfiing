@@ -1,4 +1,5 @@
 import { StyleSheet, Text } from "react-native";
+import React from "react";
 import { BeachStatus } from "../types/beach";
 
 interface StatusTextProps {
@@ -17,7 +18,7 @@ function getStatusColor(status: BeachStatus): string {
   return "#dc2626";
 }
 
-export default function StatusText({ status }: StatusTextProps): JSX.Element {
+export default function StatusText({ status }: StatusTextProps): React.ReactElement {
   return <Text style={[styles.status, { color: getStatusColor(status) }]}>{status}</Text>;
 }
 
