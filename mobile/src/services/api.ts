@@ -1,6 +1,6 @@
 import { BeachDataResponse } from "../types/beach";
 
-const LOCAL_IP = "<LOCAL_IP>";
+const LOCAL_IP = "192.168.1.6";
 const API_BASE_URL = `http://${LOCAL_IP}:3000`;
 
 interface ApiErrorPayload {
