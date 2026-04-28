@@ -1,7 +1,25 @@
-import { BeachDataResponse } from "../types/beach";
+import { Platform } from "react-native";
+import type { BeachDataResponse } from "../types/beach";
 
 const LOCAL_IP = "192.168.1.6";
-const API_BASE_URL = `http://${LOCAL_IP}:3000`;
+
+function resolveBaseUrl(): string {
+  const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+
+  if (envBaseUrl) {
+    return envBaseUrl.replace(/\/+$/, "");
+  }
+
+  if (LOCAL_IP !== "http://192.168.1.6:3000") {
+    return `http://${LOCAL_IP}:3000`;
+  }
+
+  if (Platform.OS === "android") {
+    return "http://10.0.2.2:3000";
+  }
+
+  return "http://localhost:3000";
+}
 
 interface ApiErrorPayload {
   error?: string;
@@ -31,17 +49,17 @@ function parseBeachResponse(payload: unknown): BeachDataResponse | null {
   const wind = toNumber(data.wind);
   const windDeg = toNumber(data.wind_deg) ?? 0;
   const waveHeight = toNumber(data.wave_height);
-  const wavePeriod = toNumber(data.wave_period);
-  const waveSpeed = toNumber(data.wave_speed);
-  const waveForce = toNumber(data.wave_force);
+  const wavePeriod = toNumber(data.wave_period) ?? toNumber(data.wavePeriod) ?? 0;
+  const waveSpeed = toNumber(data.wave_speed) ?? toNumber(data.waveSpeed) ?? waveHeight ?? 0;
+  const waveForce = toNumber(data.wave_force) ?? toNumber(data.waveForce) ?? waveSpeed * (waveHeight ?? 0);
 
   if (
     temp === null ||
     wind === null ||
     waveHeight === null ||
-    wavePeriod === null ||
-    waveSpeed === null ||
-    waveForce === null ||
+    !Number.isFinite(wavePeriod) ||
+    !Number.isFinite(waveSpeed) ||
+    !Number.isFinite(waveForce) ||
     typeof data.status !== "string" ||
     typeof data.best_time !== "string" ||
     typeof data.summary !== "string"
@@ -68,7 +86,8 @@ function toErrorMessage(payload: ApiErrorPayload | null, statusCode: number): st
 }
 
 export async function getBeachData(lat: number, lon: number): Promise<BeachDataResponse> {
-  const endpoint = `${API_BASE_URL}/beach?lat=${encodeURIComponent(String(lat))}&lon=${encodeURIComponent(String(lon))}`;
+  const baseUrl = resolveBaseUrl();
+  const endpoint = `${baseUrl}/beach?lat=${encodeURIComponent(String(lat))}&lon=${encodeURIComponent(String(lon))}`;
 
   let response: Response;
 
@@ -76,7 +95,7 @@ export async function getBeachData(lat: number, lon: number): Promise<BeachDataR
     response = await fetch(endpoint);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown network error";
-    throw new Error(`Network request failed: ${message}`);
+    throw new Error(`Network request failed for ${baseUrl}: ${message}`);
   }
 
   if (!response.ok) {

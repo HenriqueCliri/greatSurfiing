@@ -6,10 +6,12 @@ import DetailsScreen from "../screens/DetailsScreen";
 
 export type RootStackParamList = {
   Home: undefined;
-  Map: {
-    userLat: number;
-    userLon: number;
-  };
+  Map:
+    | {
+        userLat: number;
+        userLon: number;
+      }
+    | undefined;
   Details: {
     beachId: string;
     beachName: string;

@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState, React } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import InfoCard from "../components/InfoCard";
 import StatusBadge from "../components/StatusBadge";
 import WindDirectionArrow from "../components/WindDirectionArrow";
-import { RootStackParamList } from "../navigation";
+import type { RootStackParamList } from "../navigation";
 import { getBeachData } from "../services/api";
-import { BeachDataResponse } from "../types/beach";
+import type { BeachDataResponse } from "../types/beach";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Details">;
 

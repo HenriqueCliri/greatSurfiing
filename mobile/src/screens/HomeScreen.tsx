@@ -5,8 +5,8 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import InfoCard from "../components/InfoCard";
 import StatusBadge from "../components/StatusBadge";
 import { getBeachData } from "../services/api";
-import { BeachDataResponse } from "../types/beach";
-import { RootStackParamList } from "../navigation";
+import type { BeachDataResponse } from "../types/beach";
+import type { RootStackParamList } from "../navigation";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 

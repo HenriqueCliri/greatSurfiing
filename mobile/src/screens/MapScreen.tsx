@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../navigation";
-import { BeachMarker } from "../types/beach";
+import type { RootStackParamList } from "../navigation";
+import type { BeachMarker } from "../types/beach";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Map">;
 
@@ -12,7 +12,8 @@ const MOCK_BEACHES: BeachMarker[] = [
 ];
 
 export default function MapScreen({ navigation, route }: Props): JSX.Element {
-  const { userLat, userLon } = route.params;
+  const userLat = route.params?.userLat ?? -3.7;
+  const userLon = route.params?.userLon ?? -38.5;
 
   return (
     <View style={styles.container}>
