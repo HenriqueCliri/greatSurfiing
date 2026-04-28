@@ -1,12 +1,14 @@
-import { Platform } from "react-native";
-import { BeachResponse } from "../types/beach";
+import { BeachDataResponse } from "../types/beach";
+
+const LOCAL_IP = "<LOCAL_IP>";
+const API_BASE_URL = `http://${LOCAL_IP}:3000`;
 
 interface ApiErrorPayload {
   error?: string;
   details?: string;
 }
 
-function toFiniteNumber(value: unknown): number | null {
+function toNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
@@ -19,26 +21,30 @@ function toFiniteNumber(value: unknown): number | null {
   return null;
 }
 
-function parseBeachResponse(value: unknown): BeachResponse | null {
-  if (!value || typeof value !== "object") {
+function parseBeachResponse(payload: unknown): BeachDataResponse | null {
+  if (!payload || typeof payload !== "object") {
     return null;
   }
 
-  const data = value as Record<string, unknown>;
-  const temp = toFiniteNumber(data.temp);
-  const wind = toFiniteNumber(data.wind);
-  const waveHeight = toFiniteNumber(data.wave_height ?? data.waveHeight);
-  const status = data.status;
-  const bestTime = data.best_time ?? data.bestTime;
-  const summary = data.summary;
+  const data = payload as Record<string, unknown>;
+  const temp = toNumber(data.temp);
+  const wind = toNumber(data.wind);
+  const windDeg = toNumber(data.wind_deg) ?? 0;
+  const waveHeight = toNumber(data.wave_height);
+  const wavePeriod = toNumber(data.wave_period);
+  const waveSpeed = toNumber(data.wave_speed);
+  const waveForce = toNumber(data.wave_force);
 
   if (
     temp === null ||
     wind === null ||
     waveHeight === null ||
-    typeof status !== "string" ||
-    typeof bestTime !== "string" ||
-    typeof summary !== "string"
+    wavePeriod === null ||
+    waveSpeed === null ||
+    waveForce === null ||
+    typeof data.status !== "string" ||
+    typeof data.best_time !== "string" ||
+    typeof data.summary !== "string"
   ) {
     return null;
   }
@@ -46,60 +52,31 @@ function parseBeachResponse(value: unknown): BeachResponse | null {
   return {
     temp,
     wind,
+    wind_deg: windDeg,
     wave_height: waveHeight,
-    status: status as BeachResponse["status"],
-    best_time: bestTime as BeachResponse["best_time"],
-    summary,
+    wave_period: wavePeriod,
+    wave_speed: waveSpeed,
+    wave_force: waveForce,
+    status: data.status as BeachDataResponse["status"],
+    best_time: data.best_time as BeachDataResponse["best_time"],
+    summary: data.summary,
   };
-}
-
-function normalizeBaseUrl(raw: string): string {
-  const sanitized = raw.trim().replace(/\/+$/, "");
-
-  try {
-    const parsed = new URL(sanitized);
-    return `${parsed.protocol}//${parsed.host}`;
-  } catch {
-    return sanitized;
-  }
-}
-
-function resolveBaseUrl(): string {
-  const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
-
-  if (envBaseUrl) {
-    return normalizeBaseUrl(envBaseUrl);
-  }
-
-  // Android emulator cannot access localhost from host directly.
-  if (Platform.OS === "android") {
-    return "http://10.0.2.2:3000";
-  }
-
-  return "http://localhost:3000";
 }
 
 function toErrorMessage(payload: ApiErrorPayload | null, statusCode: number): string {
   return payload?.details || payload?.error || `Request failed with status ${statusCode}`;
 }
 
-function getConnectionHint(baseUrl: string): string {
-  return (
-    `Network request failed for ${baseUrl}. ` +
-    "If using a physical device, set EXPO_PUBLIC_API_BASE_URL to your machine LAN IP (e.g. http://192.168.1.10:3000)."
-  );
-}
-
-export async function fetchBeachConditions(lat: number, lon: number): Promise<BeachResponse> {
-  const baseUrl = resolveBaseUrl();
-  const responseUrl = `${baseUrl}/beach?lat=${encodeURIComponent(lat.toString())}&lon=${encodeURIComponent(lon.toString())}`;
+export async function getBeachData(lat: number, lon: number): Promise<BeachDataResponse> {
+  const endpoint = `${API_BASE_URL}/beach?lat=${encodeURIComponent(String(lat))}&lon=${encodeURIComponent(String(lon))}`;
 
   let response: Response;
 
   try {
-    response = await fetch(responseUrl);
-  } catch {
-    throw new Error(getConnectionHint(baseUrl));
+    response = await fetch(endpoint);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown network error";
+    throw new Error(`Network request failed: ${message}`);
   }
 
   if (!response.ok) {
@@ -115,3 +92,5 @@ export async function fetchBeachConditions(lat: number, lon: number): Promise<Be
 
   return parsed;
 }
+
+export { LOCAL_IP };

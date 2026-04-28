@@ -1,21 +1,20 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
-import * as Location from "expo-location";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import InfoCard from "../components/InfoCard";
 import StatusBadge from "../components/StatusBadge";
+import WindDirectionArrow from "../components/WindDirectionArrow";
+import { RootStackParamList } from "../navigation";
 import { getBeachData } from "../services/api";
 import { BeachDataResponse } from "../types/beach";
-import { RootStackParamList } from "../navigation";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Home">;
+type Props = NativeStackScreenProps<RootStackParamList, "Details">;
 
-export default function HomeScreen({ navigation }: Props): JSX.Element {
+export default function DetailsScreen({ route }: Props): JSX.Element {
+  const { beachName, lat, lon } = route.params;
   const [data, setData] = useState<BeachDataResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [locationText, setLocationText] = useState("Getting location...");
-  const [coords, setCoords] = useState({ lat: -3.7, lon: -38.5 });
 
   useEffect(() => {
     const load = async (): Promise<void> => {
@@ -23,20 +22,6 @@ export default function HomeScreen({ navigation }: Props): JSX.Element {
       setError(null);
 
       try {
-        const permission = await Location.requestForegroundPermissionsAsync();
-        let lat = coords.lat;
-        let lon = coords.lon;
-
-        if (permission.status === "granted") {
-          const position = await Location.getCurrentPositionAsync({});
-          lat = Number(position.coords.latitude.toFixed(5));
-          lon = Number(position.coords.longitude.toFixed(5));
-          setLocationText(`Lat ${lat}, Lon ${lon}`);
-        } else {
-          setLocationText("Location denied. Using fallback coordinates.");
-        }
-
-        setCoords({ lat, lon });
         const payload = await getBeachData(lat, lon);
         setData(payload);
       } catch (caughtError) {
@@ -49,15 +34,16 @@ export default function HomeScreen({ navigation }: Props): JSX.Element {
     };
 
     load().catch(() => {
-      setError("Unexpected initialization error");
+      setError("Unexpected details load error");
     });
-  }, []);
+  }, [lat, lon]);
+
+  const windDegrees = useMemo(() => (data ? data.wind_deg : 0), [data]);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Beach Conditions</Text>
-        <Text style={styles.location}>{locationText}</Text>
+        <Text style={styles.title}>{beachName}</Text>
 
         {loading ? <ActivityIndicator size="large" color="#2563eb" /> : null}
         {error ? <Text style={styles.error}>Error: {error}</Text> : null}
@@ -66,6 +52,12 @@ export default function HomeScreen({ navigation }: Props): JSX.Element {
           <>
             <StatusBadge status={data.status} />
             <Text style={styles.bestTime}>Best time: {data.best_time}</Text>
+
+            <View style={styles.windRow}>
+              <Text style={styles.windLabel}>Wind direction</Text>
+              <WindDirectionArrow degrees={windDegrees} />
+              <Text style={styles.windDeg}>{windDegrees.toFixed(0)}°</Text>
+            </View>
 
             <View style={styles.grid}>
               <InfoCard label="Temperature" value={`${data.temp.toFixed(1)} °C`} />
@@ -79,13 +71,6 @@ export default function HomeScreen({ navigation }: Props): JSX.Element {
             <Text style={styles.summary}>{data.summary}</Text>
           </>
         ) : null}
-
-        <Pressable
-          style={styles.button}
-          onPress={() => navigation.navigate("Map", { userLat: coords.lat, userLon: coords.lon })}
-        >
-          <Text style={styles.buttonText}>Open Map</Text>
-        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -109,16 +94,24 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: "800",
-  },
-  location: {
-    marginTop: 6,
-    marginBottom: 12,
-    color: "#64748b",
+    marginBottom: 8,
   },
   bestTime: {
     fontSize: 20,
     fontWeight: "700",
     marginBottom: 12,
+  },
+  windRow: {
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  windLabel: {
+    fontSize: 14,
+    color: "#475569",
+  },
+  windDeg: {
+    fontSize: 18,
+    fontWeight: "700",
   },
   grid: {
     width: "100%",
@@ -130,18 +123,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: "#334155",
     textAlign: "center",
-    fontSize: 16,
-  },
-  button: {
-    marginTop: 16,
-    backgroundColor: "#2563eb",
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontWeight: "700",
     fontSize: 16,
   },
   error: {
