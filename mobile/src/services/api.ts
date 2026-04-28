@@ -1,7 +1,7 @@
 import { Platform } from "react-native";
 import type { BeachDataResponse } from "../types/beach";
 
-const LOCAL_IP = "<LOCAL_IP>";
+const LOCAL_IP = "192.168.1.6";
 
 function resolveBaseUrl(): string {
   const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
@@ -10,7 +10,7 @@ function resolveBaseUrl(): string {
     return envBaseUrl.replace(/\/+$/, "");
   }
 
-  if (LOCAL_IP !== "<LOCAL_IP>") {
+  if (LOCAL_IP !== "http://192.168.1.6:3000") {
     return `http://${LOCAL_IP}:3000`;
   }
 
